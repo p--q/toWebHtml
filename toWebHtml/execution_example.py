@@ -1,6 +1,9 @@
 #!/opt/libreoffice5.2/program/python
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 import traceback
+=======
+>>>>>>> refs/heads/feature/201706081314
 def testCode(ctx, smgr):  # 引数はデコレーターで受け取る。ctx:サービスマネジャー、smgr: サービスマネジャー
     page = smgr.createInstanceWithContext("pq.ToWebHtml", ctx)
     page.setTitle("From toWebHtml Extension")
