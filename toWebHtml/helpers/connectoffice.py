@@ -7,11 +7,11 @@ from com.sun.star.beans import PropertyValue
 from contextlib import contextmanager
 from functools import partial
 from src.pythonpath.rest import component
-class Automation:
+class Automation:  # 存在しないサービス名の時はsrc/pythonpath内のcomponent.pyのクラスをインスタンス化する。
     def __init__(self, smgr, UNOCompos):
         self.smgr = smgr
         n = len(UNOCompos)
-        self.cls = {UNOCompos[i][j]:UNOCompos[i][0] for i in range(n) for j in range(1, 3)}
+        self.cls = {UNOCompos[i][j]:UNOCompos[i][0] for i in range(n) for j in range(1, 3)}  # キーをサービス名または実装名、値をクラス名、の辞書を作成。
     def createInstanceWithContext(self, service, ctx):
         if service in self.cls.keys():
             cls = getattr(component, self.cls[service])
@@ -24,17 +24,7 @@ class Automation:
             return cls(ctx, args)
         else:
             return self.smgr.createInstanceWithArgumentsAndContext(service, args, ctx)
-def macroMode(XSCRIPTCONTEXT, UNOCompos, func):
-    print("Running in Macro mode\n")
-    ctx = XSCRIPTCONTEXT.getComponentContext()
-    smgr = Automation(ctx.getServiceManager(), UNOCompos)
-    with patch("sys.stdout", new=StringIO()) as fake_out:
-        func(ctx, smgr)        
-        
-        
-        
-# funcの前後でOffice接続の処理
-@contextmanager
+@contextmanager  # funcの前後でOffice接続の処理
 def connectOffice(MODE, UNOCompos, func):
     '''
     a context manager to switch between Component mode and Automation mode
@@ -61,16 +51,15 @@ def connectOffice(MODE, UNOCompos, func):
     smgr = ctx.getServiceManager()  # サービスマネジャーの取得。
     if MODE == "UNOComponent":
         print("Running in UNOcomponent mode\n")
+        func = partial(func, ctx, smgr)
     elif MODE == "Automation":
         print("Running in Automation mode\n")
-        smgr = Automation(smgr, UNOCompos)
-    func = partial(func, ctx, smgr)
+        func = partial(func, ctx, Automation(smgr, UNOCompos))
     try:
         yield func
     except:
-        traceback.print_exc()
+        traceback.print_exc() 
     # soffice.binの終了処理。これをしないとLibreOfficeを起動できなくなる。
-    smgr = ctx.getServiceManager()  # サービスマネジャーの取得。
     desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
     prop = PropertyValue(Name="Hidden",Value=True)
     desktop.loadComponentFromURL("private:factory/swriter", "_blank", 0, (prop,))  # バックグラウンドでWriterのドキュメントを開く。

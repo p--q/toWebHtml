@@ -13,12 +13,6 @@ UNOCompos = objinsp,
 # Function for test the source
 func = testCode
 
-# Function to call from macro
-def macro():
-    ctx = XSCRIPTCONTEXT.getComponentContext()
-    smgr = ctx.getServiceManager()
-    func(ctx, smgr)
-g_exportedScripts = macro,
 MODE = None
 if __name__ == "__main__":
 #     MODE = "Automation"
