@@ -30,3 +30,9 @@ ctx is the component context, and smgr is the service manager.
 ```
 
 macro() in <a href="https://github.com/p--q/toWebHtml/blob/master/toWebHtml/execution_example.py">execution_example.py</a> is an example to call from the macro selector.
+
+## Appendix
+
+<a href="https://github.com/p--q/toWebHtml/blob/master/toWebHtml/toWebHtmlMacro.py">toWebHtmlMacro.py</a> is an example of a macro that outputs a string to a web browser without using extenｓions.
+
+HTML tags can not be used.
