@@ -7,11 +7,11 @@ from com.sun.star.beans import PropertyValue
 from contextlib import contextmanager
 from functools import partial
 from src.pythonpath.rest import component
-class Automation:
+class Automation:  # 存在しないサービス名の時はsrc/pythonpath内のcomponent.pyのクラスをインスタンス化する。
     def __init__(self, smgr, UNOCompos):
         self.smgr = smgr
         n = len(UNOCompos)
-        self.cls = {UNOCompos[i][j]:UNOCompos[i][0] for i in range(n) for j in range(1, 3)}
+        self.cls = {UNOCompos[i][j]:UNOCompos[i][0] for i in range(n) for j in range(1, 3)}  # キーをサービス名または実装名、値をクラス名、の辞書を作成。
     def createInstanceWithContext(self, service, ctx):
         if service in self.cls.keys():
             cls = getattr(component, self.cls[service])
@@ -24,15 +24,15 @@ class Automation:
             return cls(ctx, args)
         else:
             return self.smgr.createInstanceWithArgumentsAndContext(service, args, ctx)
-def macroMode(XSCRIPTCONTEXT, UNOCompos, func):
-    print("Running in Macro mode\n")
-    ctx = XSCRIPTCONTEXT.getComponentContext()
-    smgr = Automation(ctx.getServiceManager(), UNOCompos)
-    with patch("sys.stdout", new=StringIO()) as fake_out:
-        func(ctx, smgr)        
-        
-        
-        
+def terminateOffice(ctx, smgr):  # soffice.binの終了処理。これをしないとLibreOfficeを起動できなくなる。
+    desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
+    prop = PropertyValue(Name="Hidden",Value=True)
+    desktop.loadComponentFromURL("private:factory/swriter", "_blank", 0, (prop,))  # バックグラウンドでWriterのドキュメントを開く。
+    terminated = desktop.terminate()  # LibreOfficeをデスクトップに展開していない時はエラーになる。
+    if terminated:
+        print("\nThe Office has been terminated.")  # 未保存のドキュメントがないとき。
+    else:
+        print("\nThe Office is still running. Someone else prevents termination.")  # 未保存のドキュメントがあってキャンセルボタンが押された時。
 # funcの前後でOffice接続の処理
 @contextmanager
 def connectOffice(MODE, UNOCompos, func):
@@ -59,23 +59,33 @@ def connectOffice(MODE, UNOCompos, func):
         sys.exit()
     print("Connected to a running office ...\n")
     smgr = ctx.getServiceManager()  # サービスマネジャーの取得。
-    if MODE == "UNOComponent":
-        print("Running in UNOcomponent mode\n")
-    elif MODE == "Automation":
-        print("Running in Automation mode\n")
-        smgr = Automation(smgr, UNOCompos)
-    func = partial(func, ctx, smgr)
-    try:
-        yield func
-    except:
-        traceback.print_exc()
-    # soffice.binの終了処理。これをしないとLibreOfficeを起動できなくなる。
-    smgr = ctx.getServiceManager()  # サービスマネジャーの取得。
-    desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
-    prop = PropertyValue(Name="Hidden",Value=True)
-    desktop.loadComponentFromURL("private:factory/swriter", "_blank", 0, (prop,))  # バックグラウンドでWriterのドキュメントを開く。
-    terminated = desktop.terminate()  # LibreOfficeをデスクトップに展開していない時はエラーになる。
-    if terminated:
-        print("\nThe Office has been terminated.")  # 未保存のドキュメントがないとき。
+    if MODE == "Macro":
+        script_uri = "toWebHtml|toWebHtml|macro.py$macro"
+        script_uri = "vnd.sun.star.script:" + script_uri + "?language=Python&location=user"
+        mspf = ctx.getValueByName("/singletons/com.sun.star.script.provider.theMasterScriptProviderFactory")
+        sp = mspf.createScriptProvider("")
+        script = sp.getScript(script_uri)
+        script.invoke((), (), ())
     else:
-        print("\nThe Office is still running. Someone else prevents termination.")  # 未保存のドキュメントがあってキャンセルボタンが押された時。
+        if MODE == "UNOComponent":
+            print("Running in UNOcomponent mode\n")
+            func = partial(func, ctx, smgr)
+        elif MODE == "Automation":
+            print("Running in Automation mode\n")
+            func = partial(func, ctx, Automation(smgr, UNOCompos))
+        try:
+            yield func
+        except:
+            traceback.print_exc()
+        terminateOffice(ctx, smgr)    
+            
+    # soffice.binの終了処理。これをしないとLibreOfficeを起動できなくなる。
+#     smgr = ctx.getServiceManager()  # サービスマネジャーの取得。
+#     desktop = smgr.createInstanceWithContext("com.sun.star.frame.Desktop", ctx)
+#     prop = PropertyValue(Name="Hidden",Value=True)
+#     desktop.loadComponentFromURL("private:factory/swriter", "_blank", 0, (prop,))  # バックグラウンドでWriterのドキュメントを開く。
+#     terminated = desktop.terminate()  # LibreOfficeをデスクトップに展開していない時はエラーになる。
+#     if terminated:
+#         print("\nThe Office has been terminated.")  # 未保存のドキュメントがないとき。
+#     else:
+#         print("\nThe Office is still running. Someone else prevents termination.")  # 未保存のドキュメントがあってキャンセルボタンが押された時。

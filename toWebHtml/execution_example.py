@@ -12,16 +12,17 @@ objinsp = "ToWebHtml", "pq.ToWebHtml", "com.blogspot.pq.ToWebHtml"
 UNOCompos = objinsp,
 # Function for test the source
 func = testCode
-
-# Function to call from macro
-def macro():
-    ctx = XSCRIPTCONTEXT.getComponentContext()
-    smgr = ctx.getServiceManager()
-    func(ctx, smgr)
-g_exportedScripts = macro,
+# def macro():  # Function to call from macro
+#     ctx = XSCRIPTCONTEXT.getComponentContext()
+#     smgr = ctx.getServiceManager()
+#     from helpers.connectoffice import Automation, terminateOffice
+#     func(ctx, Automation(smgr, UNOCompos))
+#     terminateOffice(ctx, smgr)
+# g_exportedScripts = macro,
 MODE = None
 if __name__ == "__main__":
+    MODE = "Macro"
 #     MODE = "Automation"
-    from helpers.connectoffice import connectOffice
+    from pythonpath.connectoffice import connectOffice
     with connectOffice(MODE, UNOCompos, func) as fn:
         fn()
