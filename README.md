@@ -1,6 +1,8 @@
-# toWebHtml
+# toWebHtml　LibreOffice Extension
 
 LibreOffice extension that outputs html to default web browser.
+
+This repository contains Eclipse's PyDev project.
 
 ## Deployment
 
