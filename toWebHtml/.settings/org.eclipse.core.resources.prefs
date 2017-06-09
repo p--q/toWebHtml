@@ -1,2 +1,6 @@
 eclipse.preferences.version=1
-encoding//src/toWebHtmlMacro.py=utf-8
+encoding//helpers/connectoffice.py=utf-8
+encoding//src/towebhtml.py=utf-8
+encoding//tools/createIDLs.py=utf-8
+encoding/execution_example.py=utf-8
+encoding/toWebHtmlMacro.py=utf-8

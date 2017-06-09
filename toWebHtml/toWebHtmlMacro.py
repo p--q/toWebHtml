@@ -1,5 +1,6 @@
 # toWebHtmlMacro.py
 # -*- coding: utf-8 -*-
+# LibreOfficeのディスパッチコマンドでウェブブラウザに出力するマクロ。
 from com.sun.star.beans import PropertyValue 
 def toWebHtml():
     desktop = XSCRIPTCONTEXT.getDesktop()  # デスクトップを取得。
